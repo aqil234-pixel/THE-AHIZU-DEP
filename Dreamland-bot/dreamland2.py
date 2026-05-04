@@ -87,7 +87,7 @@ async def get_bot_diagnostics():
 # --- HANDLER UTAMA ---
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # --- WAJIB TAMBAHIN BARIS INI ---
+    # --- FIX BUG: Ambil user_id dulu ---
     user_id = update.effective_user.id 
     
     teks = (
@@ -98,24 +98,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     keyboard = [
         [InlineKeyboardButton("🖼️ Lihat Katalog", callback_data='lihat_katalog')],
-        [InlineKeyboardButton("🤖 Cara Chat AI", callback_data='bantuan_ai')] 
+        [InlineKeyboardButton("🤖 Cara Chat dengan AI", callback_data='bantuan_ai')] 
     ]
     
-    # Menu Admin Otomatis
-    if user_id == ADMIN_ID:
+    # Logika Admin
+    if str(user_id) == str(ADMIN_ID):
         keyboard.append([InlineKeyboardButton("🐞 CEK BUG (Admin Only)", callback_data="admin_cek_bug")])
     
     reply_markup = InlineKeyboardMarkup(keyboard)
-    logo_path = os.path.join(PATH_FOTO_LENGKAP, "logo_dream.PNG")
+    logo_path = os.path.join(BASE_DIR, "assets", "logo_dream.jpg")
 
-    # Logika pengiriman (jika logo ada pake foto, kalo ga ada pake teks)
+    # Kirim pesan (pake foto kalau ada, teks kalau nggak ada)
     if os.path.exists(logo_path):
         with open(logo_path, 'rb') as photo:
             if update.message:
                 await update.message.reply_photo(photo=photo, caption=teks, reply_markup=reply_markup, parse_mode='Markdown')
             else:
                 await update.callback_query.message.reply_photo(photo=photo, caption=teks, reply_markup=reply_markup, parse_mode='Markdown')
-                await update.callback_query.message.delete()
+                try: await update.callback_query.message.delete()
+                except: pass
     else:
         if update.message:
             await update.message.reply_text(teks, reply_markup=reply_markup, parse_mode='Markdown')
