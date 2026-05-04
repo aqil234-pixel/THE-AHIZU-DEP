@@ -87,11 +87,13 @@ async def get_bot_diagnostics():
 # --- HANDLER UTAMA ---
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
+    # --- WAJIB TAMBAHIN BARIS INI ---
+    user_id = update.effective_user.id 
+    
     teks = (
-        "🐟 *Selamat datang di Dreamlandfish!*\n"
+        "Selamat datang di *dreamlandfish.myd* 🐟\n"
         "Pusat ikan hias terbaik impian Anda!\n\n"
-        "💡 _Tanya seputar ikan? Langsung ketik aja, AI Bony siap bantu!_"
+        "💡 _Tanya seputar ikan? Langsung ketik aja di chat, Admin AI kami siap bantu!_"
     )
     
     keyboard = [
