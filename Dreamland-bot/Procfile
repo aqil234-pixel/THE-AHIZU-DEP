@@ -1,1 +1,1 @@
-worker: python dreamlandbot-new.py
+echo "worker: python dreamlandbot-new.py"
