@@ -1,0 +1,21 @@
+# Konfigurasi Rahasia (Sangat Penting!)
+.env
+
+# Folder Python (File sampah kompilasi)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Lingkungan Virtual (Jika kamu pakai venv)
+venv/
+env/
+ENV/
+
+# Folder IDE (VS Code / PyCharm)
+.vscode/
+.idea/
+
+# File Sistem
+.DS_Store
+Thumbs.db
