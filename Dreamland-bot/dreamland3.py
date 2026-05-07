@@ -81,50 +81,32 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     
     # --- LOGIKA KHUSUS ADMIN ---
-    
-    if str(user_id) == str(ADMIN_ID):
+    if ADMIN_ID and str(user_id) == str(ADMIN_ID):
         keyboard.append([InlineKeyboardButton("🐞 CEK BUG (Admin Only)", callback_data="admin_cek_bug")])
     
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    # Jika dipanggil via command /start
-    if update.message:
-        await update.message.reply_text(
-            "🐟 *Selamat Datang di Dreamlandfish!*\nAda yang bisa Bony bantu hari ini?",
-            reply_markup=reply_markup,
-            parse_mode="Markdown"
-        )
-    # Jika dipanggil via tombol 'Back'
-    elif update.callback_query:
-        await update.callback_query.edit_message_text(
-            "🐟 *Menu Utama Dreamlandfish*",
-            reply_markup=reply_markup,
-            parse_mode="Markdown"
-        )
-
+    # --- LOGIKA MUNCULIN GAMBAR LOGO ---
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    nama_file_logo = os.path.join(BASE_DIR, "assets", "logo_dream.jpg")
+    logo_path = os.path.join(BASE_DIR, "assets", "logo_dream.jpg")
 
+    # Eksekusi pengiriman pesan (Bisa kirim Logo + Teks sekaligus)
     if update.message:
-        if os.path.exists(nama_file_logo):
-            try:
-                with open(nama_file_logo, 'rb') as photo:
-                    await update.message.reply_photo(photo=photo, caption=teks, reply_markup=reply_markup, parse_mode='Markdown')
-                return ConversationHandler.END
-            except Exception as e:
-                print(f"Error kirim logo: {e}")
-                await update.message.reply_text(teks, reply_markup=reply_markup, parse_mode='Markdown')
+        if os.path.exists(logo_path):
+            with open(logo_path, 'rb') as photo:
+                await update.message.reply_photo(photo=photo, caption=teks, reply_markup=reply_markup, parse_mode='Markdown')
         else:
             await update.message.reply_text(teks, reply_markup=reply_markup, parse_mode='Markdown')
-
+            
     elif update.callback_query:
         query = update.callback_query
         await query.answer()
+        # Hapus pesan sebelumnya agar chat bersih
         try: await query.delete_message()
         except: pass
             
-        if os.path.exists(nama_file_logo):
-             with open(nama_file_logo, 'rb') as photo:
+        if os.path.exists(logo_path):
+             with open(logo_path, 'rb') as photo:
                 await context.bot.send_photo(chat_id=update.effective_chat.id, photo=photo, caption=teks, reply_markup=reply_markup, parse_mode='Markdown')
         else:
              await context.bot.send_message(chat_id=update.effective_chat.id, text=teks, reply_markup=reply_markup, parse_mode='Markdown')
