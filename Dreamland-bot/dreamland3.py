@@ -66,7 +66,6 @@ KATALOG = {
 # --- 3. ALUR CLIENT (USER) ---
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # --- FIX 1: Definisi user_id (Penyebab Error) ---
     user_id = update.effective_user.id 
     
     teks = (
@@ -75,7 +74,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "💡 _Tanya seputar ikan? Langsung ketik aja di chat, Admin AI kami siap bantu!_"
     )
     
-    # --- FIX 2: Susun Keyboard ---
     keyboard = [
         [InlineKeyboardButton("🖼️ Lihat Katalog", callback_data='lihat_katalog')],
         [InlineKeyboardButton("🛒 Pesan Ikan", callback_data='lihat_katalog')],
@@ -89,7 +87,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     logo_path = os.path.join(BASE_DIR, "assets", "logo_dream.jpg")
 
-    # --- FIX 3: Logika Kirim Pesan (Satu Pesan Saja) ---
     if update.message:
         if os.path.exists(logo_path):
             with open(logo_path, 'rb') as photo:
@@ -111,6 +108,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
              await context.bot.send_message(chat_id=update.effective_chat.id, text=teks, reply_markup=reply_markup, parse_mode='Markdown')
 
     return ConversationHandler.END
+    
+async def bantuan_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    # Ini bakal ngeluarin pop-up buat ngasih tau cara pakainya
+    await query.answer(text="💡 CARA PENGGUNAAN:\n\nNggak perlu klik menu apa-apa, Kak! Langsung aja ketik pertanyaan Kakak (misal: 'Bang ikan cupang makanannya apa?') lalu kirim. Nanti AI kami bakal otomatis balas! 🤖✨", show_alert=True)
 
 # --- LOGIKA KHUSUS ADMIN ---
     
@@ -162,12 +164,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
              await context.bot.send_message(chat_id=update.effective_chat.id, text=teks, reply_markup=reply_markup, parse_mode='Markdown')
 
     return ConversationHandler.END
-
-# 👇 FUNGSI BARU BUAT NANGKEP TOMBOL AI 👇
-async def bantuan_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    # Ini bakal ngeluarin pop-up buat ngasih tau cara pakainya
-    await query.answer(text="💡 CARA PENGGUNAAN:\n\nNggak perlu klik menu apa-apa, Kak! Langsung aja ketik pertanyaan Kakak (misal: 'Bang ikan cupang makanannya apa?') lalu kirim. Nanti AI kami bakal otomatis balas! 🤖✨", show_alert=True)
 
 async def menu_katalog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
