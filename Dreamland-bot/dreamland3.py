@@ -66,17 +66,51 @@ KATALOG = {
 # --- 3. ALUR CLIENT (USER) ---
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # --- FIX 1: Definisi user_id (Penyebab Error) ---
+    user_id = update.effective_user.id 
+    
     teks = (
         "Selamat datang di *dreamlandfish.myd* 🐟\n"
         "Pusat ikan hias terbaik impian Anda!\n\n"
         "💡 _Tanya seputar ikan? Langsung ketik aja di chat, Admin AI kami siap bantu!_"
     )
+    
+    # --- FIX 2: Susun Keyboard ---
     keyboard = [
         [InlineKeyboardButton("🖼️ Lihat Katalog", callback_data='lihat_katalog')],
         [InlineKeyboardButton("🛒 Pesan Ikan", callback_data='lihat_katalog')],
         [InlineKeyboardButton("🤖 Cara Chat dengan AI", callback_data='bantuan_ai')] 
     ]
+    
+    # Cek Admin
+    if ADMIN_ID and str(user_id) == str(ADMIN_ID):
+        keyboard.append([InlineKeyboardButton("🐞 CEK BUG (Admin Only)", callback_data="admin_cek_bug")])
+    
     reply_markup = InlineKeyboardMarkup(keyboard)
+    logo_path = os.path.join(BASE_DIR, "assets", "logo_dream.jpg")
+
+    # --- FIX 3: Logika Kirim Pesan (Satu Pesan Saja) ---
+    if update.message:
+        if os.path.exists(logo_path):
+            with open(logo_path, 'rb') as photo:
+                await update.message.reply_photo(photo=photo, caption=teks, reply_markup=reply_markup, parse_mode='Markdown')
+        else:
+            await update.message.reply_text(teks, reply_markup=reply_markup, parse_mode='Markdown')
+            
+    elif update.callback_query:
+        query = update.callback_query
+        await query.answer()
+        # Hapus pesan sebelumnya agar bersih
+        try: await query.delete_message()
+        except: pass
+            
+        if os.path.exists(logo_path):
+             with open(logo_path, 'rb') as photo:
+                await context.bot.send_photo(chat_id=update.effective_chat.id, photo=photo, caption=teks, reply_markup=reply_markup, parse_mode='Markdown')
+        else:
+             await context.bot.send_message(chat_id=update.effective_chat.id, text=teks, reply_markup=reply_markup, parse_mode='Markdown')
+
+    return ConversationHandler.END
 
 # --- LOGIKA KHUSUS ADMIN ---
     
@@ -488,20 +522,18 @@ def main():
         print("❌ TOKEN KOSONG!")
         return
 
-    # Inisialisasi app (CUKUP SATU KALI)
     app = Application.builder().token(TOKEN).build()
     
-    # --- DAFTAR HANDLER ---
+    # Handlers Perintah & Tombol
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(admin_cek_bug_callback, pattern='^admin_cek_bug$'))
-    
     app.add_handler(CallbackQueryHandler(menu_katalog, pattern='^lihat_katalog$'))
-    app.add_handler(CallbackQueryHandler(tampilkan_deskripsi, pattern='^desc_'))
+    app.add_handler(CallbackQueryHandler(tampilkan_deskripsi, pattern='^desc_')) # Harus ada ini!
     app.add_handler(CallbackQueryHandler(cek_status_order, pattern='^cekstatus_'))
     app.add_handler(CallbackQueryHandler(admin_update_status, pattern='^(setlunas_|setkirim_)'))
     app.add_handler(CallbackQueryHandler(bantuan_ai, pattern='^bantuan_ai$'))
 
-    # Setup Conversation (Fungsi Beli)
+    # Alur Pesanan (Conversation)
     conv_handler = ConversationHandler(
         entry_points=[CallbackQueryHandler(minta_nama, pattern='^beli_')],
         states={
@@ -517,7 +549,7 @@ def main():
     )
     app.add_handler(conv_handler)
 
-    # Chat AI (Paling bawah agar tidak bentrok)
+    # Chat AI (WAJIB PALING BAWAH)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat_ai))
 
     print("🚀 Bot Dreamland RUNNING...")
