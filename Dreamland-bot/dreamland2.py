@@ -152,8 +152,8 @@ async def chat_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 2. Bikin Prompt yang lebih detail dan galak (biar gak bahas hal di luar toko)
     system_prompt = f"""
-Kamu adalah 'Bony', asisten admin toko ikan 'Dreamlandfish.myd'. 
-Gaya bicara: Gaul, santai, pake bahasa anak muda (pake 'gue/lu' atau 'kak/bang' yang asik), ramah, dan informatif.
+Kamu adalah 'gammy', asisten admin toko ikan 'Dreamlandfish.myd'. 
+Gaya bicara: Gaul, santai, pake bahasa anak muda (pake 'saya/anda' atau 'kak' yang asik), ramah, dan informatif.
 
 TUGAS UTAMA:
 1. Menjawab pertanyaan tentang ikan yang ada di katalog kami.
@@ -171,7 +171,7 @@ ATURAN PENTING:
 """
     
     try:
-        # Kirim status 'typing...' biar kelihatan kayak manusia lagi ngetik
+       
         await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
         
         chat_completion = groq_client.chat.completions.create(
@@ -188,8 +188,7 @@ ATURAN PENTING:
     except Exception as e:
         logging.error(f"Error Groq: {e}")
         await update.message.reply_text("Waduh, otak gue lagi nge-lag dikit nih. Coba tanya lagi dong! 😅")
-# --- (Sisanya seperti fungsi menu_katalog, minta_nama, dll tetap sama tapi pastikan key-nya 'foto') ---
-# ... (Tambahkan fungsi menu_katalog, buat_nota_akhir, dll dari kodingan lamamu di sini) ...
+
 
 async def menu_katalog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -208,7 +207,27 @@ async def menu_katalog(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except:
             await context.bot.send_message(chat_id=update.effective_chat.id, text=f"{teks_ikan}\n⚠️ Gambar tidak ditemukan", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='Markdown')
     return CHOOSING_FISH
+    
+async def tampilkan_deskripsi(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    # Mengambil ID ikan dari callback data (misal: desc_betta -> betta)
+    key = query.data.split("_")[1] 
+    
+    if key in KATALOG:
+        ikan = KATALOG[key]
+        deskripsi = ikan.get("deskripsi", "Deskripsi belum tersedia.")
+        
+        teks_popup = (
+            f"🐟 {ikan['nama'].upper()}\n"
+            f"💰 Harga: Rp{ikan['harga']:,}\n\n"
+            f"📝 KETERANGAN:\n{deskripsi}"
+        )
+        # show_alert=True agar muncul sebagai pop-up kotak di layar
+        await query.answer(text=teks_popup, show_alert=True)
+    else:
+        await query.answer(text="⚠️ Deskripsi tidak ditemukan.", show_alert=True)
 
+    
 # --- MAIN ---
 def main():
     if not TOKEN: return print("❌ TOKEN KOSONG!")
@@ -218,7 +237,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(admin_cek_bug_callback, pattern='^admin_cek_bug$'))
     app.add_handler(CallbackQueryHandler(menu_katalog, pattern='^lihat_katalog$'))
-    # ... tambahkan handler lainnya sesuai kodinganmu ...
+    app.add_handler(CallbackQueryHandler(tampilkan_deskripsi, pattern='^desc_'))
     
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat_ai))
     
