@@ -143,21 +143,51 @@ async def admin_cek_bug_callback(update: Update, context: ContextTypes.DEFAULT_T
         await query.message.reply_text("✨ Terminal Clean: No errors.")
 
 async def chat_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not groq_client: return
-    
     pesan_user = update.message.text
-    system_prompt = "Kamu asisten admin toko ikan Dreamlandfish. Jawab gaul, asik, singkat, dan ramah."
+    
+    # 1. Kita rakit daftar produk dari KATALOG biar AI tahu apa yang kita jual
+    daftar_produk = ""
+    for k, v in KATALOG.items():
+        daftar_produk += f"- {v['nama']}: Rp{v['harga']:,} ({v['deskripsi']})\n"
+
+    # 2. Bikin Prompt yang lebih detail dan galak (biar gak bahas hal di luar toko)
+    system_prompt = f"""
+Kamu adalah 'Bony', asisten admin toko ikan 'Dreamlandfish.myd'. 
+Gaya bicara: Gaul, santai, pake bahasa anak muda (pake 'gue/lu' atau 'kak/bang' yang asik), ramah, dan informatif.
+
+TUGAS UTAMA:
+1. Menjawab pertanyaan tentang ikan yang ada di katalog kami.
+2. Memberikan tips perawatan ikan secara umum.
+3. Mengarahkan orang untuk klik tombol 'Lihat Katalog' jika mereka mau beli.
+
+DATA KATALOG KAMI:
+{daftar_produk}
+
+ATURAN PENTING:
+- JANGAN jawab kalau ditanya hal di luar ikan (politik, agama, teknologi, dll). Bilang aja "Waduh, gue cuma jago urusan ikan nih, kak! Tanya soal ikan aja yuk."
+- Kalau ikan yang ditanya GAK ADA di katalog, bilang jujur tapi tawarkan ikan yang mirip.
+- Jawabnya singkat-singkat aja, jangan kayak koran.
+- Bisa diajak bercanda tapi tetep sopan.
+"""
     
     try:
+        # Kirim status 'typing...' biar kelihatan kayak manusia lagi ngetik
+        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
+        
         chat_completion = groq_client.chat.completions.create(
-            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": pesan_user}],
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": pesan_user}
+            ],
             model="llama-3.1-8b-instant",
         )
-        await update.message.reply_text(chat_completion.choices[0].message.content)
+        
+        balasan_ai = chat_completion.choices[0].message.content
+        await update.message.reply_text(balasan_ai)
+        
     except Exception as e:
         logging.error(f"Error Groq: {e}")
-        await update.message.reply_text("Waduh, otak AI-nya lagi loading... Coba lagi bentar ya! 😅")
-
+        await update.message.reply_text("Waduh, otak gue lagi nge-lag dikit nih. Coba tanya lagi dong! 😅")
 # --- (Sisanya seperti fungsi menu_katalog, minta_nama, dll tetap sama tapi pastikan key-nya 'foto') ---
 # ... (Tambahkan fungsi menu_katalog, buat_nota_akhir, dll dari kodingan lamamu di sini) ...
 
