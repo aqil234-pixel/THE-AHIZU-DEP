@@ -80,41 +80,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("🤖 Cara Chat dengan AI", callback_data='bantuan_ai')] 
     ]
     
-    # Cek Admin
-    if ADMIN_ID and str(user_id) == str(ADMIN_ID):
-        keyboard.append([InlineKeyboardButton("🐞 CEK BUG (Admin Only)", callback_data="admin_cek_bug")])
-    
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    logo_path = os.path.join(BASE_DIR, "assets", "logo_dream.jpg")
-
-    if update.message:
-        if os.path.exists(logo_path):
-            with open(logo_path, 'rb') as photo:
-                await update.message.reply_photo(photo=photo, caption=teks, reply_markup=reply_markup, parse_mode='Markdown')
-        else:
-            await update.message.reply_text(teks, reply_markup=reply_markup, parse_mode='Markdown')
-            
-    elif update.callback_query:
-        query = update.callback_query
-        await query.answer()
-        # Hapus pesan sebelumnya agar bersih
-        try: await query.delete_message()
-        except: pass
-            
-        if os.path.exists(logo_path):
-             with open(logo_path, 'rb') as photo:
-                await context.bot.send_photo(chat_id=update.effective_chat.id, photo=photo, caption=teks, reply_markup=reply_markup, parse_mode='Markdown')
-        else:
-             await context.bot.send_message(chat_id=update.effective_chat.id, text=teks, reply_markup=reply_markup, parse_mode='Markdown')
-
-    return ConversationHandler.END
-    
-async def bantuan_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    # Ini bakal ngeluarin pop-up buat ngasih tau cara pakainya
-    await query.answer(text="💡 CARA PENGGUNAAN:\n\nNggak perlu klik menu apa-apa, Kak! Langsung aja ketik pertanyaan Kakak (misal: 'Bang ikan cupang makanannya apa?') lalu kirim. Nanti AI kami bakal otomatis balas! 🤖✨", show_alert=True)
-
-# --- LOGIKA KHUSUS ADMIN ---
+    # --- LOGIKA KHUSUS ADMIN ---
     
     if str(user_id) == str(ADMIN_ID):
         keyboard.append([InlineKeyboardButton("🐞 CEK BUG (Admin Only)", callback_data="admin_cek_bug")])
@@ -164,6 +130,11 @@ async def bantuan_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
              await context.bot.send_message(chat_id=update.effective_chat.id, text=teks, reply_markup=reply_markup, parse_mode='Markdown')
 
     return ConversationHandler.END
+
+async def bantuan_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    # Ini bakal ngeluarin pop-up buat ngasih tau cara pakainya
+    await query.answer(text="💡 CARA PENGGUNAAN:\n\nNggak perlu klik menu apa-apa, Kak! Langsung aja ketik pertanyaan Kakak (misal: 'Bang ikan cupang makanannya apa?') lalu kirim. Nanti AI kami bakal otomatis balas! 🤖✨", show_alert=True)
 
 async def menu_katalog(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
